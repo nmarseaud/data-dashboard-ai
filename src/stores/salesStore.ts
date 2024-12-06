@@ -20,6 +20,17 @@ export const useSalesStore = defineStore('sales', {
       return grouped;
     },
 
+    salesByProduct: (state) => {
+      const grouped = new Map<string, Product[]>();
+      state.sales.forEach(sale => {
+        if (!grouped.has(sale.name)) {
+          grouped.set(sale.name, []);
+        }
+        grouped.get(sale.name)?.push(sale);
+      });
+      return grouped;
+    },
+
     totalSalesByCompany: (state) => {
       const totals = new Map<string, number>();
       state.sales.forEach(sale => {
@@ -52,5 +63,16 @@ export const useSalesStore = defineStore('sales', {
         this.error = (err as Error).message;
       }
     },
+
+    async updateSale(updatedSale: Product) {
+      try {
+        await db.init();
+        await db.updateSale(updatedSale);
+      } catch (err) {
+        this.error = (err as Error).message;
+      }
+      // Refresh sales data after update
+      await this.fetchSales();
+    }
   },
 });

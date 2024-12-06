@@ -8,8 +8,20 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const salesStore = useSalesStore();
 
+const props = defineProps<{
+  onEdit: (sale: any) => void;
+}>();
+
 const chartData = computed(() => {
   const companies = Array.from(salesStore.salesByCompany.keys());
+
+  // Get all unique dates from all companies and sort them
+  const allDates = new Set();
+  salesStore.salesByCompany.forEach(sales => {
+    sales.forEach(sale => allDates.add(sale.date));
+  });
+  const sortedDates = Array.from(allDates).sort();
+
   const datasets = companies.map(company => ({
     label: company,
     data: salesStore.salesByCompany.get(company)?.map(sale => sale.sales) || [],
@@ -18,7 +30,7 @@ const chartData = computed(() => {
   }));
 
   return {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: sortedDates,
     datasets
   };
 });
@@ -34,6 +46,20 @@ const chartOptions = {
       display: true,
       text: 'Sales by Company'
     }
+  },
+  onClick: (event: any, elements: any) => {
+    console.log('clicked', elements);
+    if (elements.length > 0) {
+      const datasetIndex = elements[0].datasetIndex;
+      const index = elements[0].index;
+
+      const company = Array.from(salesStore.salesByCompany.keys())[datasetIndex];
+      const sale = salesStore.salesByCompany.get(company)?.[index];
+
+      if (sale) {
+        props.onEdit(sale);
+      }
+    }
   }
 };
 </script>
@@ -41,5 +67,6 @@ const chartOptions = {
 <template>
   <div class="h-[400px] w-full">
     <Line :data="chartData" :options="chartOptions" />
+    <p class="text-sm text-gray-500 mt-2 text-center">Click on any data point to edit</p>
   </div>
 </template>

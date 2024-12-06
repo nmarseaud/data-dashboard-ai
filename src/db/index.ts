@@ -35,7 +35,7 @@ class DatabaseService {
   async addSale(sale: Omit<Product, 'id'>): Promise<number> {
     return new Promise((resolve, reject) => {
       if (!this.db) throw new Error('Database not initialized');
-      
+
       const transaction = this.db.transaction(['sales'], 'readwrite');
       const store = transaction.objectStore('sales');
       const request = store.add(sale);
@@ -68,6 +68,19 @@ class DatabaseService {
       const request = index.getAll(company);
 
       request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async updateSale(updatedSale: Product): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.db) throw new Error('Database not initialized');
+
+      const transaction = this.db.transaction(['sales'], 'readwrite');
+      const store = transaction.objectStore('sales');
+      const request = store.put(updatedSale);
+
+      request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
   }
